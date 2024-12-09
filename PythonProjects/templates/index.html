@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Box</title>
+    <style>
+               body { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            flex-direction: column; 
+            height: 100vh; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #e9ecef; 
+        }
+        h1 {
+    font-family: 'Montserrat', sans-serif; /* New font for heading */
+    font-weight: 700; /* Bold font weight */
+    color: #333; /* Darker color for better contrast */
+    margin-bottom: 20px; /* Space below the heading */
+    text-align: center; /* Center the heading */
+    font-size: 3em; /* Increase font size */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Add text shadow */
+}
+        #chat-area { 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            height: 300px; 
+            overflow-y: scroll; 
+            margin-bottom: 10px; 
+            background-color: #f9f9f9; 
+            border-radius: 5px; 
+            width: 400px; 
+            max-width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        #user-input-container {
+            display: flex; 
+            justify-content: center; 
+            width: 400px; /* Match the width of the chat area */
+        }
+        #user-input { 
+            width: 70%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            margin-right: 5px; 
+        }
+        #send-button { 
+            padding: 10px 15px; 
+            border: none; 
+            background-color: #007bff; 
+            color: white; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        #send-button:hover { 
+            background-color: #0056b3; 
+        }
+        #upload-container {
+    display: flex; /* Align items in a row */
+    gap: 5px; /* Space between input and button */
+    margin-bottom: 10px; /* Space below the upload container */
+}
+    </style>
+</head>
+<body>
+    <h1>AI Chat Box</h1>
+    <div id="upload-container">
+        <input type="file" id="file-input" accept=".pdf">
+        <button id="upload-button">Upload Data</button>
+    </div>
+    <div id="chat-area"></div>
+    <div id="user-input-container">
+        <input type="text" id="user-input" placeholder="Type your message here...">
+    </div>
+
+    <script>
+        document.getElementById('upload-button').onclick = function() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                fetch('/upload_file', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.content) {
+                        document.getElementById('chat-area').innerHTML += `<div class="message">PDF Content:</div><div class="message">${data.content}</div>`;
+                    } else {
+                        document.getElementById('chat-area').innerHTML += `<div class="message">Error: ${data.error}</div>`;
+                    }
+                    document.getElementById('chat-area').scrollTop = document.getElementById('chat-area').scrollHeight; // Auto-scroll to the bottom
+                });
+            }
+        };
+
+        document.getElementById('user-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        const message = this.value;
+        if (message) {
+            fetch('/send_message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('chat-area').innerHTML += `<div class="message user-message">You: ${message}</div>`;
+                document.getElementById('chat-area').innerHTML += `<div class="message ai-message">AI: ${data.response}</div>`;
+                this.value = ''; // Clear the input field
+                document.getElementById('chat-area').scrollTop = document.getElementById('chat-area').scrollHeight; // Auto-scroll to the bottom
+            });
+        }
+    }
+});
+
+document.getElementById('upload-button').onclick = function() {
+    const fileInput = document.getElementById('file-input');
+    const file = fileInput.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        fetch('/upload_file', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.content) {
+                document.getElementById('chat-area').innerHTML += `<div class="message">PDF Content:</div><div class="message">${data.content}</div>`;
+            } else {
+                document.getElementById('chat-area').innerHTML += `<div class="message">Error: ${data.error}</div>`;
+            }
+            document.getElementById('chat-area').scrollTop = document.getElementById('chat-area').scrollHeight; 
+        });
+    }
+};
+    </script>
+</body>
+</html>
